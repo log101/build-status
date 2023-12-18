@@ -1,0 +1,43 @@
+name: deploy-build-status
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      deployTo:
+        description: 'Where to deploy?'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+
+jobs:
+  trigger_stage_deploy:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deployTo == 'staging')
+    runs-on: ubuntu-latest
+    environment: amplify
+    steps:
+      - name: deploy
+        run: |
+          URL="${{ secrets.AMPLIFY_WEBHOOK_URL }}"
+          curl -X POST -d {} "$URL" -H "Content-Type:application/json"
+  monitor-build-status:
+    needs: trigger_stage_deploy
+    runs-on: ubuntu-latest
+    environment: amplify
+    steps:
+      - id: monitor
+        name: Monitor build status
+        uses: log101/amplify-build-status@master
+        with:
+          app-id: ${{ secrets.AMPLIFY_BACKOFFICE_STAGING_APP_ID }}
+          branch-name: ${{ github.ref_name }}
+          commit-id: ${{ github.sha }}
+          wait: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
