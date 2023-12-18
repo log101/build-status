@@ -33,7 +33,7 @@ jobs:
         name: Monitor build status
         uses: log101/amplify-build-status@master
         with:
-          app-id: ${{ secrets.AMPLIFY_BACKOFFICE_STAGING_APP_ID }}
+          app-id: ${{ secrets.AMPLIFY_APP_ID }}
           branch-name: ${{ github.ref_name }}
           commit-id: ${{ github.sha }}
           wait: true
